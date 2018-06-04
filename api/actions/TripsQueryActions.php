@@ -5,7 +5,7 @@ class SearchAllTrips extends BaseApiAction
     protected function performApiCall(array $urlParams, array $queryParams, $body)
     {
         $dataAccess = DataAccessManagerFactory::getInstance();
-        return $this->dataAccess->queryForList("SELECT * from trip");
+        return $this->dataAccess->queryForList("SELECT * from trip order by name");
     }
 }
 

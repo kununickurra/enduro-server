@@ -1,10 +1,11 @@
 var _map = null;
-var markers = new Object();
+var markers = [];
 var showMarkers = false;
 var currentTripLogs;
 var tripLatLngBounds;
 var tripPathPolyLine = null;
-var tripLatLngPath;
+var tripLatLngPath = [];
+var markerId = 0;
 
 var menuStyle, contextMenuOptions, contextMenu;
 
@@ -21,7 +22,8 @@ $(document).ready(function () {
         showMarkers = $(this).prop("checked");
         refreshMarkers();
         console.log("Selected : " + $("#input-select-trips").find('option:selected').val());
-    })
+    });
+
 });
 
 function showMap(position, container) {
@@ -41,10 +43,12 @@ function showMap(position, container) {
 }
 
 function initContextMenu() {
+
     menuStyle = {
         menu: 'context_menu',
         menuSeparator: 'context_menu_separator'
     };
+
     contextMenuOptions  = {
         classNames: menuStyle,
         menuItems: [
@@ -53,7 +57,9 @@ function initContextMenu() {
             { label:'Show previous', id:'menu_show_previous',
                 className: 'context_menu_item', eventName:'menu_show_previous_clicked' },
             { label:'Show next', id:'menu_show_next',
-                className: 'context_menu_item', eventName:'menu_show_next_clicked' }
+                className: 'context_menu_item', eventName:'menu_show_next_clicked' },
+            { label:'Add Marker After', id:'menu_add_marker_after',
+                className: 'context_menu_item', eventName:'menu_add_marker_after_clicked' }
         ],
         pixelOffset: new google.maps.Point(10, -5),
         zIndex: 5,
@@ -76,11 +82,48 @@ function initContextMenu() {
                 case 'menu_show_next_clicked':
                     showMarker(source.custom_sequence + 1);
                     break;
+                case 'menu_add_marker_after_clicked':
+                    addNewMarkerAtSequence(latLng, source);
+                    break;
                 default:
                     // freak out
                     break;
             }
         });
+
+    mapMenuStyle = {
+        menu: 'context_menu',
+        menuSeparator: 'context_menu_separator'
+    };
+
+    mapContextMenuOptions  = {
+        classNames: mapMenuStyle,
+        menuItems: [
+            { label:'Add Marker', id:'menu_add_marker',
+                className: 'context_menu_item', eventName:'menu_add_marker_clicked' }
+
+        ],
+        pixelOffset: new google.maps.Point(10, -5),
+        zIndex: 5,
+        classNames: {menu:'context_menu', menuSeparator:'context_menu_separator'}
+    };
+
+    mapContextMenu = new ContextMenu(_map, mapContextMenuOptions);
+
+    google.maps.event.addListener(mapContextMenu, 'menu_item_selected',
+        function(latLng, eventName, source){
+            switch(eventName){
+                case 'menu_add_marker_clicked':
+                    // do something
+                    console.log("menu_add_marker_clicked")
+                    addNewMarker(latLng);
+                    break;
+            }
+        });
+
+    google.maps.event.addListener(_map, 'rightclick', function(mouseEvent) {
+        mapContextMenu.show(mouseEvent.latLng, _map);
+    });
 }
 
 function loadTripList() {
@@ -143,7 +186,7 @@ function drawPath(tripLogs) {
             var latLng = new google.maps.LatLng(tripLogs[i].latitude, tripLogs[i].longitude);
             tripLatLngPath.push(latLng);
             tripLatLngBounds.extend(latLng);
-            addMarker(tripLogs[i], j);
+            addTripLogMarker(tripLogs[i], j);
             if(showMarkers) {
                 showMarker(j);
             }
@@ -168,28 +211,46 @@ function refreshMarkers() {
     }
 }
 function showMarker(sequence) {
-    if(sequence > 0 && sequence<markers.length) {
+    if(sequence >= 0 && sequence<markers.length) {
         markers[sequence].setMap(_map);
     }
 }
 
 function hideMarker(sequence) {
-    if(sequence > 0 && sequence<markers.length) {
+    if(sequence >= 0 && sequence<markers.length) {
         markers[sequence].setMap(null);
     }
 }
 
-function addMarker(tripLog, sequence) {
+function addNewMarkerAtSequence(position, marker) {
+    var sequence = markers.findIndex(function (el) {
+        return el.custom_marker_id === marker.custom_marker_id;
+    })
+    tripLatLngPath.splice(sequence + 1, 0, position);
+    var marker = addMarker(position, "Sequence "+tripLatLngPath.length -1+"", sequence + 1);
+    markers.splice(sequence + 1, 0, marker);
+    drawLine();
+}
+
+function addNewMarker(position) {
+    tripLatLngPath.push(position);
+    var marker = addMarker(position, "Sequence "+tripLatLngPath.length -1+"", tripLatLngPath.length -1);
+    markers.push(marker);
+    drawLine();
+}
+
+function addMarker(position, title, sequence) {
     var marker = new google.maps.Marker({
-        position: new google.maps.LatLng(tripLog.latitude, tripLog.longitude),
+        position: position,
         animation: google.maps.Animation.DROP,
-        title: 'Id: '+tripLog.id + ', Sequence : '+sequence+', Date '+new Date(tripLog),
+        title: title,
         icon: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png',
-        draggable: true
+        draggable: true,
+        map: _map
     });
-    marker.custom_sequence = sequence;
+    marker.custom_marker_id = markerId++;
     marker.addListener('click', function() {
-        markerClicked(marker, sequence)
+        markerClicked(marker, sequence);
     });
 
     google.maps.event.addListener(marker, 'rightclick', function(mouseEvent) {
@@ -197,28 +258,43 @@ function addMarker(tripLog, sequence) {
     });
 
     google.maps.event.addListener(marker, 'dragend', function(evt) {
-        tripLatLngPath[this.custom_sequence] = this.getPosition();
+        var sequence = markers.findIndex(function (el) {
+            return el.custom_marker_id === marker.custom_marker_id;
+        })
+        tripLatLngPath[sequence] = this.getPosition();
         drawLine();
+        //updateLine();
     });
-    /*google.maps.event.addListener(marker, 'mousemove', function(e) {
-        marker.setPosition(e.latLng);
-    });*/
+    return marker;
+}
 
-    markers[sequence]= marker;
+function addTripLogMarker(tripLog, sequence) {
+    var position = new google.maps.LatLng(tripLog.latitude, tripLog.longitude);
+    var title = 'Id: ' + tripLog.id + ', Sequence : ' + sequence + ', Date ' + new Date(tripLog);
+    var marker = addMarker(position, title, sequence);
+    markers.push(marker);
+}
+
+function updateLine() {
+    tripPathPolyLine.setPath(tripLatLngPath);
 }
 
 function drawLine() {
-    if(tripPathPolyLine == null) {
-        tripPathPolyLine = new google.maps.Polyline({
-            path: tripLatLngPath,
-            strokeColor: "#6da1ff",
-            strokeOpacity: 1.0,
-            strokeWeight: 5,
-            map: _map
-        });
-    } else {
-        tripPathPolyLine.setPath(tripLatLngPath);
+    if(tripPathPolyLine != null) {
+        tripPathPolyLine.setMap(null);
     }
+    console.log("Trip path")
+    tripLatLngPath.forEach(function (element, sequence ) {
+        //console.log(element.lat() +', '+ element.lng()+', marker Id : '+markers[sequence].custom_marker_id);
+    });
+
+    tripPathPolyLine = new google.maps.Polyline({
+        path: tripLatLngPath,
+        strokeColor: "#6da1ff",
+        strokeOpacity: 1.0,
+        strokeWeight: 5,
+        map: _map
+    });
 }
 
 function refreshTripCombo(result) {

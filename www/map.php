@@ -48,6 +48,7 @@
     <title>Title</title>
     <div data-role="">
         <select id="input-select-trips" placeholder="Select a trip">
+            <option selected="selected" value=""/>
         </select>
         <Label for="checkbox-show-markers">Show Markers</Label>
         <input type="checkbox" id="checkbox-show-markers">
