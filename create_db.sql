@@ -25,5 +25,9 @@ CREATE TABLE IF NOT EXISTS trip_log (
     FOREIGN KEY (trip_id) REFERENCES trip(id)
 );
 
+CREATE UNIQUE INDEX trip_log_primary ON trip_log (id);
+CREATE INDEX trip_log_fk_trip ON trip_log (trip_id);
+
+
 TRUNCATE TABLE trip_log;
 TRUNCATE TABLE trip;
