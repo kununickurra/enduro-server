@@ -12,6 +12,8 @@ $app = new Slim();
 require_once "actions/commons.php";
 require_once "actions/syncTripsActions.php";
 require_once "actions/TripsQueryActions.php";
+require_once "actions/saveItineraryActions.php";
+require_once "actions/ItineraryQueryActions.php";
 
 
 // Sync trips
@@ -37,6 +39,35 @@ function searchTripLogs() {
     $action = new SearchTripLogs();
     $action->execute();
 }
+
+
+// Save Itinerary
+$app->post('/itinerary', 'syncItinerary');
+
+function syncItinerary() {
+    $action = new SaveItineraryActions();
+    $action->execute();
+}
+
+
+// Itinerary list
+$app->get('/itinerary', 'searchAllTrips');
+
+function searchItineraries() {
+    $action = new SearchAllItineraries();
+    $action->execute();
+}
+
+// Itinerary list
+$app->get('/anchor', 'searchAnchors');
+
+function searchItinerary() {
+    $action = new SearchItineraryPath();
+    $action->execute();
+}
+
+
+
 
 // Client Origins
 $app->get('/v2/:country_code/client-origins', 'v2_getClientOrigins');

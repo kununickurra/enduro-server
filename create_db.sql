@@ -42,6 +42,7 @@ CREATE UNIQUE INDEX itinerary_primary ON itinerary (id);
 CREATE TABLE IF NOT EXISTS anchor (
   id INTEGER NOT NULL AUTO_INCREMENT,
   itinerary_id INTEGER NOT NULL,
+  sequence INTEGER NOT NULL,
   latitude DECIMAL(9,6) NOT NULL,
   longitude DECIMAL(9,6) NOT NULL,
   PRIMARY KEY(id)

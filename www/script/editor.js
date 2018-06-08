@@ -1,28 +1,39 @@
 var editor = null;
 
 $(document).ready(function () {
+
     editor = new ItineraryEditor(document.getElementById("editor-map-container"));
     editor.show(new google.maps.LatLng(50.45363, 4.707692));
 
     $("#button-save-itinerary").click(function () {
-        var path = editor.getItinerary();
-        for(var i = 0; i<path.length; i++) {
-
+        var itineraryData = new Object();
+        itineraryData.name = $("#text-itinerary-name").val();
+        var itineraryAnchors = editor.getItinerary();
+        var path = [];
+        for (var i = 0; i<itineraryAnchors; i++) {
+            path.push({
+                        latitude : itineraryAnchors[i].lat(),
+                        longitude : itineraryAnchors[i].lng()
+                      }
+            )
         }
+        itineraryData.path = path;
+        uploadItinerary(itineraryData);
     })
 
 });
 
-
-function uploadItinerary() {
+function uploadItinerary(data) {
     $.ajax({
         type: 'POST',
+        data: JSON.stringify(data),
         headers: {
             "Access-Control-Allow-Origin": "*"
         },
-        url: "../api/trip",
+        url: "../api/itinerary",
+
         success: function (result) {
-            refreshTripCombo(result);
+            alert("Save successful !");
         },
 
         error: function (result) {
