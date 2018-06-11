@@ -10,7 +10,7 @@ $(document).ready(function () {
         itineraryData.name = $("#text-itinerary-name").val();
         var itineraryAnchors = editor.getItinerary();
         var path = [];
-        for (var i = 0; i<itineraryAnchors; i++) {
+        for (var i = 0; i<itineraryAnchors.length; i++) {
             path.push({
                         latitude : itineraryAnchors[i].lat(),
                         longitude : itineraryAnchors[i].lng()

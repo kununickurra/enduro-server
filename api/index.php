@@ -51,7 +51,7 @@ function syncItinerary() {
 
 
 // Itinerary list
-$app->get('/itinerary', 'searchAllTrips');
+$app->get('/itinerary', 'searchItineraries');
 
 function searchItineraries() {
     $action = new SearchAllItineraries();
@@ -61,7 +61,7 @@ function searchItineraries() {
 // Itinerary list
 $app->get('/anchor', 'searchAnchors');
 
-function searchItinerary() {
+function searchAnchors() {
     $action = new SearchItineraryPath();
     $action->execute();
 }
