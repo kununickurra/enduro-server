@@ -23,6 +23,18 @@ var ItineraryEditor = (function () {
             return this.markerId++;
         }
 
+        this.clear = function () {
+            this.tripLatLngPath = [];
+            for (var i = 0; i<this.markers.length; i++) {
+                this.markers[i].setMap(null);
+            }
+            this.markers = [];
+            if(this.tripPathPolyLine != null) {
+                this.tripPathPolyLine.setMap(null);
+                this.tripPathPolyLine = null;
+            }
+        }
+
         this.insertMarker = function (position, sequence) {
             var marker = this.createMarker(position, "New Marker");
             if (sequence >= this.markers.length) {
@@ -112,7 +124,6 @@ var ItineraryEditor = (function () {
             }
 
         }
-
     }
 
     ItineraryEditor.prototype.testAccess = function (position) {
@@ -150,6 +161,20 @@ var ItineraryEditor = (function () {
     }
 
 
-        return ItineraryEditor;
+    // Public prototype function
+    ItineraryEditor.prototype.initPath = function (newPath) {
+        //Current Way points structure.
+        this.clear();
+        for (var i = 0; i<newPath.length; i++) {
+            this.addNewMarker(newPath[i])
+        }
+    }
+
+    ItineraryEditor.prototype.clearPath = function () {
+        //Current Way points structure.
+        this.clear();
+    }
+
+    return ItineraryEditor;
 
 })();

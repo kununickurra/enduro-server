@@ -49,6 +49,14 @@ function syncItinerary() {
     $action->execute();
 }
 
+// Update Itinerary
+$app->put('/itinerary/:id', 'updateItinerary');
+
+function updateItinerary() {
+    $action = new UpdateItineraryActions();
+    $action->execute();
+}
+
 
 // Itinerary list
 $app->get('/itinerary', 'searchItineraries');
