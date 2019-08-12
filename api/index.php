@@ -66,11 +66,11 @@ function searchItineraries() {
     $action->execute();
 }
 
-// Itinerary list
-$app->get('/anchor', 'searchAnchors');
+// Get Itinerary with details
+$app->get('/itinerary/:id', 'searchItineraryById');
 
-function searchAnchors() {
-    $action = new SearchItineraryPath();
+function searchItineraryById() {
+    $action = new SearchItineraryById();
     $action->execute();
 }
 

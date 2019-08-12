@@ -34,10 +34,18 @@ $(document).ready(function () {
             $("#text-itinerary-name").val(itineraryName);
         }
     });
-
-
 });
 
+
+function showToast(type, text) {
+    $.toast({
+        text:  text,
+        position: "top-right",
+        showHideTransition : 'slide',
+        hideAfter : 2000,
+        icon: type
+    });
+}
 
 function refreshEditor(itineraryData) {
     var path = [];
@@ -67,20 +75,18 @@ function uploadItinerary(data) {
     $.ajax({
         type: 'POST',
         data: JSON.stringify(data),
+        dataType: 'text',
         headers: {
             "Access-Control-Allow-Origin": "*"
         },
         url: "../api/itinerary",
 
         success: function (result) {
-            alert("Save successful !");
+            showToast("info", "Itinerary saved !")
         },
 
         error: function (result) {
-            switch (result.status) {
-                case 404:
-                    alert("Error happened while calling the server !");
-            }
+            showToast("error", "Error saving the Itinerary ("+result.status+")")
         },
     });
 }
@@ -97,14 +103,12 @@ function updateItinerary(data, onSuccess) {
         url: "../api/itinerary/"+data.id,
 
         success: function (result) {
+            showToast("info", "Itinerary updated !")
             onSuccess(result);
         },
 
         error: function (result) {
-            switch (result.status) {
-                case 200:
-                    alert("Error happened while calling the server !");
-            }
+            showToast("error", "Error saving the Itinerary ("+result.status+")")
         },
     });
 }
@@ -135,9 +139,9 @@ function loadItineraryData(itineraryId) {
         headers: {
             "Access-Control-Allow-Origin": "*"
         },
-        url: "../api/anchor?itinerary_id="+itineraryId,
+        url: "../api/itinerary/"+itineraryId,
         success: function (result) {
-            refreshEditor(result);
+            refreshEditor(result.path);
         },
         error: function (result) {
             switch (result.status) {

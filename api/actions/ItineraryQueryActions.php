@@ -8,11 +8,14 @@ class SearchAllItineraries extends BaseApiAction
     }
 }
 
-class SearchItineraryPath extends BaseApiAction
+class SearchItineraryById extends BaseApiAction
 {
     protected function performApiCall(array $urlParams, array $queryParams, $body)
     {
-        $itineraryId = $queryParams["itinerary_id"];
-        return $this->dataAccess->queryForList("SELECT * from anchor WHERE itinerary_id = $itineraryId ORDER BY sequence");
+        $itineraryId = $urlParams["id"];
+        $itinerary = $this->dataAccess->queryForObject("SELECT id, `name` from itinerary WHERE id = $itineraryId");
+        $itineraryPath =  $this->dataAccess->queryForList("SELECT * from anchor WHERE itinerary_id = $itineraryId ORDER BY sequence");
+        $itinerary["path"] = $itineraryPath;
+        return $itinerary;
     }
 }
